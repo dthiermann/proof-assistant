@@ -1,0 +1,16 @@
+
+(define (inc n f x) (f (n f x)))
+(define (sum n m f x) (n f (m f x)))
+(define (product n m f x) (n (m f) x))
+
+(define (zero f x) x)
+(define (one f x) (f x))
+(define (two f x) (f (f x)))
+(define three (inc two))
+(define four (inc three))
+(define five (inc four))
+(define six (inc five))
+(define seven (inc six))
+(define eight (inc seven))
+(define nine (inc eight))
+
