@@ -1,16 +1,26 @@
 // expand defs function
 // evaluate lambda expressions
-
-defs =["list",
+let defs = ["list",
     ["define", ["inc", "n", "f", "x"], ["f", ["n","f","x"]]],
     ["define", ["zero", "f", "x"], "x"],
 
     ["define", ["one", ["inc", "zero"]]],
     ["define", ["two", ["inc", "one"]]],
     ["define", ["three", ["inc", "two"]]],
-    ["define", ["four", ["inc", "three"]]],
+    ["define", ["four", ["inc", "three"]]]];
 
-    ];
+// convert trees to binary trees using left associativity
+function makeLeftPairs(expression) {
+    if (expression.length > 2) {
+        return expression.reduce(
+            (a,b) => [a,b]
+        )
+    }
+    else
+    {
+        return expression;
+    }
+}
 
 // apply a function to every string in nested arrays
 function recursiveMap(expression, f) {
@@ -62,10 +72,15 @@ function tokenize(parensExpr) {
 }
 
 // testing
-let expression = "(hello ((how are) you))";
-console.log(tokenize(expression));
+
+let expression = ["hello", "how", "are", "you"];
+console.log(makeLeftPairs(expression));
+
 
 /*
+console.log(tokenize(expression));
+
+
 console.log(isWord("hello".split("")));
 console.log(isWord("he llo".split("")));
 console.log(isWord("(hello".split("")));
