@@ -1,13 +1,18 @@
-// expand defs function
-// evaluate lambda expressions
-let defs = ["list",
-    ["define", ["inc", "n", "f", "x"], ["f", ["n","f","x"]]],
-    ["define", ["zero", "f", "x"], "x"],
+module.exports = replace;
 
-    ["define", ["one", ["inc", "zero"]]],
-    ["define", ["two", ["inc", "one"]]],
-    ["define", ["three", ["inc", "two"]]],
-    ["define", ["four", ["inc", "three"]]]];
+
+function replace(oldTerm, newTerm, expression) {
+    function change(term) {
+        if (term == oldTerm) {
+            return newTerm;
+        }
+        else {
+            return term;
+        }
+    }
+
+    return recursiveMap(expression, change);
+}
 
 // convert trees to binary trees using left associativity
 function makeLeftPairs(expression) {
