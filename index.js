@@ -1,6 +1,140 @@
+/*
 
-// want to be able to click on terms to expand their defs
-// want to be able to choose which reduction to make
+
+
+ */
+function and(a,b) {
+    return (a && b);
+}
+
+function or(a,b) {
+    return (a || b)
+}
+
+function not(a) {
+    return !a;
+}
+
+
+let unflattenCases = [
+    [["l", "a"],  ["l", "a"]],
+    [["l", 1], ["l", 1]  ],
+    [["l", "a", "b"],   ["l", ["a", "b"]]  ],
+    [["a", "b", "c"],[["a", "b"], "c"]]
+]
+let flat = ["l", "a", "b", "c"];
+
+function arrayPrint(arr) {
+    if (typeof(arr) == "string") {
+        return arr;
+    }
+    if (typeof(arr) == "number") {
+        return arr.toString();
+    }
+
+    else {
+        let output = "[";
+        for (let i = 0; i < arr.length - 1; i++) {
+            output += arrayPrint(arr[i]) + ", ";
+        }
+        output += arrayPrint(arr[arr.length - 1]) + "]";
+        return output;
+    }
+    
+}
+
+function arrayEquals(a, b) {
+    // base case: a, b, are strings or ints
+    if (not(Array.isArray(a))) {
+        if (not(a == b)) {
+            return false;
+        }
+    }
+    else if (a.length == b.length) {
+        for (let i = 0; i < a.length; i++) {
+             arrayEquals(a[i], b[i]);
+        }
+        return true;
+    }
+}
+
+// cases is a list of [input, expected] pairs
+function test(f, cases, prettyPrint, equality) {
+    cases.forEach((instance) => {
+        let actual = f(instance[0]);
+        let expected = instance[1];
+        let result = equality(actual, expected);
+        console.log(result);
+        if (!result) {
+            console.log("Actual: " + prettyPrint(actual));
+            console.log("Expected: " + prettyPrint(expected));
+        }
+    })
+}
+
+test((expr) => unflatten(expr, "l"), unflattenCases, arrayPrint, arrayEquals);
+
+
+
+
+function isVariable(n) {
+    return typeof(n) == "number";
+}
+
+function isApplication(M, bind) {
+    return (M[0] != bind);
+}
+
+function isAbstraction(M, bind) {
+    return (M[0] == bind);
+}
+
+function shift(terms, n) {
+    return terms.map(a => a + n);
+
+}
+
+// N is a list of terms
+function deBruijnReduce(M, N, bind) {
+    if (isVariable(M)) {
+        return N[M];
+    }
+    else if (isApplication(M, bind)) {
+        return [deBruijnReduce(M[0], N), deBruijnReduce(M[1], N)];
+    }
+    else if (isAbstraction(M, bind)) {
+        return [bind, deBruijnReduce(M[1], [1].concat(shift(N, 1) ))];
+    }
+}
+
+
+function unflatten(expression, bind) {
+    if (isVariable(expression)) {
+        return expression;
+    }
+    else if (isAbstraction(expression, bind)) {
+        if (expression.length > 2) {
+            let tail = expression.slice(1);
+            return[expression[0], unflatten(tail)];
+
+        }
+        else {
+            return expression;
+        }
+    }
+    else if (isApplication(expression, bind)) {
+        if (expression.length > 2) {
+            let head = expression.slice(0, expression.length - 1);
+            return [unflatten(head), expression[expression.length - 1]];
+        }
+        else {
+            return expression;
+        }
+    }
+}
+
+    
+
 
 let div = document.createElement("div");
 div.textContent = "hello";
@@ -15,9 +149,9 @@ function expandDef(expression, def) {
     replace(def[0], def[1], expression);
 }
 
-// check to see if expression is in the form [["lambda", "x", n], m]
-function reducible(expression) {
-    return (expression.length == 2) && (expression[0][0] == "lambda");
+// check to see if expression is in the form [[bind, "x", n], m]
+function reducible(expression, bind) {
+    return (expression.length == 2) && (expression[0][0] == bind);
     
 }
 
@@ -106,5 +240,15 @@ function tokenize(parensExpr) {
     return splitExpr;
 }
 
-export * from "./index.js";
+function printExpression(expr) {
+    if (typeof(expr) == "string") {
+        return expr;
+    }
+    else {
+        let printed = "(";
+        for (k=0; k < expr.length; k++) {
+            printed = printed + printExpression(expr[k]);
+        }
+    }
 
+}
