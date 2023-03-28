@@ -2,11 +2,12 @@ import { test, arrayPrint, unflattenCases } from "./tests.js";
 import {and, or, not} from "./boolean.js";
 
 
+
 function runTests() {
     test((expr) => unflatten(expr, "l"), unflattenCases, arrayPrint, arrayEquals);
 }
 
-runTests();
+//runTests();
 
 function arrayEquals(a, b) {
     // base case: a, b, are strings or ints
@@ -40,18 +41,11 @@ function shift(terms, n) {
 
 }
 
-// N is a list of terms
-function deBruijnReduce(M, N, bind) {
-    if (isVariable(M)) {
-        return N[M];
-    }
-    else if (isApplication(M, bind)) {
-        return [deBruijnReduce(M[0], N), deBruijnReduce(M[1], N)];
-    }
-    else if (isAbstraction(M, bind)) {
-        return [bind, deBruijnReduce(M[1], [1].concat(shift(N, 1) ))];
-    }
+function deBruijnReduce(expr, bind) {
+    
 }
+
+
 
 
 function unflatten(expression, bind) {
@@ -173,7 +167,9 @@ function tokenize(parensExpr) {
                 splitExpr.push(word);
                 word = "";
             }
+            if (parensExpr[i] != " ") {
             splitExpr.push(parensExpr[i]);
+            }
         }
         else {
             word += parensExpr[i];
@@ -186,15 +182,37 @@ function tokenize(parensExpr) {
     return splitExpr;
 }
 
-function printExpression(expr) {
-    if (typeof(expr) == "string") {
-        return expr;
-    }
-    else {
-        let printed = "(";
-        for (k=0; k < expr.length; k++) {
-            printed = printed + printExpression(expr[k]);
-        }
-    }
+//  "(,(,equal,(,(,sum,five,),three,),),eight,)"
+// "(a b)"
 
+// stack holds ancestors, including current
+// 
+
+
+
+ 
+function parse(tokens) {
+    let tree = [];
+    for (let i=0; i < tokens.length; i++) {
+        if (tokens[i] == "(") {
+            tree.push([]);
+        }
+        else if (tokens[i] == ")") {
+            let finished = tree.pop();
+            tree[tree.length - 1].push(finished);
+        }
+        else {
+            tree[tree.length - 1].push(tokens[i]);
+        }
+        arrayPrint(tree);
+
+    }
+    return tree;
 }
+
+
+let exp = "((a b) (c (d e))) ";
+
+arrayPrint([]);
+arrayPrint([[]]);
+// parse(tokenize(exp));

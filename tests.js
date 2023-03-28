@@ -1,9 +1,8 @@
 export { test, arrayPrint, unflattenCases };
 
-let deBruijnCases = [
-    [ [["l", 1], "a"], "a"],
-    [ ]
-]
+import { and, or, not } from "./boolean.js";
+
+
 
 let unflattenCases = [
     [["l", "a"],  ["l", "a"]],
@@ -23,10 +22,11 @@ function arrayPrint(arr) {
 
     else {
         let output = "[";
-        for (let i = 0; i < arr.length - 1; i++) {
+        for (let i = 0; i < arr.length - 2; i++) {
             output += arrayPrint(arr[i]) + ", ";
         }
-        output += arrayPrint(arr[arr.length - 1]) + "]";
+        output += 
+        output += "]";
         return output;
     }
     
