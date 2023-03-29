@@ -1,36 +1,27 @@
-export { test, arrayPrint, unflattenCases };
+export { test, printExpression as arrayPrint };
 
 import { and, or, not } from "./boolean.js";
 
 
-
-let unflattenCases = [
-    [["l", "a"],  ["l", "a"]],
-    [["l", 1], ["l", 1]  ],
-    [["l", "a", "b"],   ["l", ["a", "b"]]  ],
-    [["a", "b", "c"],[["a", "b"], "c"]]
-]
-let flat = ["l", "a", "b", "c"];
-
-function arrayPrint(arr) {
-    if (typeof(arr) == "string") {
-        return arr;
+function printExpression(expr) {
+    if (typeof(expr) == "string") {
+        return expr;
     }
-    if (typeof(arr) == "number") {
-        return arr.toString();
+    if (typeof(expr) == "number") {
+        return expr.toString();
     }
 
     else {
         let output = "[";
-        if (arr.length == 1) {
-            output+= arrayPrint(arr[0]);
+        if (expr.length == 1) {
+            output+= printExpression(expr[0]);
         }
-        else if (arr.length > 1) {
-            for (let i = 0; i < arr.length - 1; i++) {
-                output += arrayPrint(arr[i]);
+        else if (expr.length > 1) {
+            for (let i = 0; i < expr.length - 1; i++) {
+                output += printExpression(expr[i]);
                 output += ", "
             }
-            output += arrayPrint(arr[arr.length - 1]);
+            output += printExpression(expr[expr.length - 1]);
         }
         output += "]";
         return output;

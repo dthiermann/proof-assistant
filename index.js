@@ -147,37 +147,33 @@ function recursiveMap(expression, f) {
     return newExpr;
 }
 
-// takes an array of characters
-function isWord(parensExpr) {
-    return parensExpr.map(isLetter).reduce((a,b) => a && b, true);
-}
-
-function isLetter(character) {
-    return ((character != "(") &&
-            (character != ")") &&
-            (character != " "))
-}
-
-function tokenize(parensExpr) {
+// three character categories:
+// " " "\n" terminate the current word if there is one and add it as a token
+// "(" ")" terminate the current word if there is one, add current char as next token
+// anything else: add to word
+function tokenize(parensExpr, whiteSpace, grouping) {
     let splitExpr = [];
     let word = "";
     for (let i = 0; i < parensExpr.length; i++) {
-        if (!(isLetter(parensExpr[i]))) {
+        let current = parensExpr[i];
+
+        if (whiteSpace.includes(current)) {
             if (word.length > 0) {
                 splitExpr.push(word);
                 word = "";
             }
-            if (parensExpr[i] != " ") {
-            splitExpr.push(parensExpr[i]);
+
+        }
+        else if (grouping.includes(current)) {
+            if (word.length > 0) {
+                splitExpr.push(word);
+                word = "";
             }
+            splitExpr.push(current);
         }
         else {
-            word += parensExpr[i];
+            word += current;
         }
-    }
-
-    if (word.length > 0) {
-        splitExpr.push(word);
     }
     return splitExpr;
 }
@@ -214,6 +210,8 @@ function parse(tokens) {
 }
 
 
-let exp = "((a b) (c (d e))) ";
+let exp = "((hello there) how)";
+let ignore = [" ", "\n", "\t"];
+let parens = ["(", ")"];
 
-console.log(parse(tokenize(exp)));
+console.log(tokenize(exp, ignore, parens));
