@@ -1,5 +1,6 @@
-import { test, arrayPrint, unflattenCases } from "./tests.js";
+import { test } from "./tests.js";
 import {and, or, not} from "./boolean.js";
+import {parse, tokenize, printExpression} from "./parsing.js";
 
 
 
@@ -147,71 +148,3 @@ function recursiveMap(expression, f) {
     return newExpr;
 }
 
-// three character categories:
-// " " "\n" terminate the current word if there is one and add it as a token
-// "(" ")" terminate the current word if there is one, add current char as next token
-// anything else: add to word
-function tokenize(parensExpr, whiteSpace, grouping) {
-    let splitExpr = [];
-    let word = "";
-    for (let i = 0; i < parensExpr.length; i++) {
-        let current = parensExpr[i];
-
-        if (whiteSpace.includes(current)) {
-            if (word.length > 0) {
-                splitExpr.push(word);
-                word = "";
-            }
-
-        }
-        else if (grouping.includes(current)) {
-            if (word.length > 0) {
-                splitExpr.push(word);
-                word = "";
-            }
-            splitExpr.push(current);
-        }
-        else {
-            word += current;
-        }
-    }
-    return splitExpr;
-}
-
-//  "(,(,equal,(,(,sum,five,),three,),),eight,)"
-// "(a b)"
-
-// stack holds ancestors, including current
-// 
-
-
-
- 
-function parse(tokens) {
-    let tree = [];
-    for (let i=0; i < tokens.length; i++) {
-        if (tokens[i] == "(") {
-            tree.push([]);
-        }
-        else if (tokens[i] == ")") {
-            let finished = tree.pop();
-            if (tree.length == 0) {
-                return finished;
-            }
-            tree[tree.length - 1].push(finished);
-        }
-        else {
-            tree[tree.length - 1].push(tokens[i]);
-        }
-        
-
-    }
-    return tree;
-}
-
-
-let exp = "((hello there) how)";
-let ignore = [" ", "\n", "\t"];
-let parens = ["(", ")"];
-
-console.log(tokenize(exp, ignore, parens));
