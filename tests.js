@@ -22,10 +22,16 @@ function arrayPrint(arr) {
 
     else {
         let output = "[";
-        for (let i = 0; i < arr.length - 2; i++) {
-            output += arrayPrint(arr[i]) + ", ";
+        if (arr.length == 1) {
+            output+= arrayPrint(arr[0]);
         }
-        output += 
+        else if (arr.length > 1) {
+            for (let i = 0; i < arr.length - 1; i++) {
+                output += arrayPrint(arr[i]);
+                output += ", "
+            }
+            output += arrayPrint(arr[arr.length - 1]);
+        }
         output += "]";
         return output;
     }

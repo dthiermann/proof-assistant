@@ -199,12 +199,15 @@ function parse(tokens) {
         }
         else if (tokens[i] == ")") {
             let finished = tree.pop();
+            if (tree.length == 0) {
+                return finished;
+            }
             tree[tree.length - 1].push(finished);
         }
         else {
             tree[tree.length - 1].push(tokens[i]);
         }
-        arrayPrint(tree);
+        
 
     }
     return tree;
@@ -213,6 +216,4 @@ function parse(tokens) {
 
 let exp = "((a b) (c (d e))) ";
 
-arrayPrint([]);
-arrayPrint([[]]);
-// parse(tokenize(exp));
+console.log(parse(tokenize(exp)));
