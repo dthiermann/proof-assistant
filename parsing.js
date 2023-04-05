@@ -1,10 +1,6 @@
-export { tokenize, parse, printExpression};
+export { tokenize, parse, unflatten};
 
-let exp = "((hello there) how)";
-let ignore = [" ", "\n", "\t"];
-let parens = ["(", ")"];
-
-console.log(tokenize(exp, ignore, parens));
+import { isVariable, isApplication, isAbstraction } from "./index.js";
 // three character categories:
 // " " "\n" terminate the current word if there is one and add it as a token
 // "(" ")" terminate the current word if there is one, add current char as next token
@@ -42,7 +38,30 @@ function tokenize(parensExpr, whiteSpace, grouping) {
 // stack holds ancestors, including current
 // 
 
+function unflatten(expression, bind) {
+    if (isVariable(expression)) {
+        return expression;
+    }
+    else if (isAbstraction(expression, bind)) {
+        if (expression.length > 2) {
+            let tail = expression.slice(1);
+            return[expression[0], unflatten(tail)];
 
+        }
+        else {
+            return expression;
+        }
+    }
+    else if (isApplication(expression, bind)) {
+        if (expression.length > 2) {
+            let head = expression.slice(0, expression.length - 1);
+            return [unflatten(head), expression[expression.length - 1]];
+        }
+        else {
+            return expression;
+        }
+    }
+}
 
  
 function parse(tokens) {
@@ -65,31 +84,4 @@ function parse(tokens) {
 
     }
     return tree;
-}
-
-
-function printExpression(expr) {
-    if (typeof(expr) == "string") {
-        return expr;
-    }
-    if (typeof(expr) == "number") {
-        return expr.toString();
-    }
-
-    else {
-        let output = "[";
-        if (expr.length == 1) {
-            output+= printExpression(expr[0]);
-        }
-        else if (expr.length > 1) {
-            for (let i = 0; i < expr.length - 1; i++) {
-                output += printExpression(expr[i]);
-                output += ", "
-            }
-            output += printExpression(expr[expr.length - 1]);
-        }
-        output += "]";
-        return output;
-    }
-    
 }

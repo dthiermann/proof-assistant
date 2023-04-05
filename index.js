@@ -1,150 +1,137 @@
-import { test } from "./tests.js";
+import { test, printExpr } from "./tests.js";
 import {and, or, not} from "./boolean.js";
-import {parse, tokenize, printExpression} from "./parsing.js";
+import {parse, tokenize, unflatten } from "./parsing.js";
 
+export { arrayEquals, mapFreeVariables, deBruijnReduce, isVariable, isApplication, isAbstraction };
 
+// testing
 
-function runTests() {
-    test((expr) => unflatten(expr, "l"), unflattenCases, arrayPrint, arrayEquals);
-}
-
-//runTests();
-
-function arrayEquals(a, b) {
-    // base case: a, b, are strings or ints
-    if (not(Array.isArray(a))) {
-        if (not(a == b)) {
-            return false;
-        }
-    }
-    else if (a.length == b.length) {
-        for (let i = 0; i < a.length; i++) {
-             arrayEquals(a[i], b[i]);
-        }
-        return true;
-    }
-}
-
-function isVariable(n) {
-    return typeof(n) == "number";
-}
-
-function isApplication(M, bind) {
-    return (M[0] != bind);
-}
-
-function isAbstraction(M, bind) {
-    return (M[0] == bind);
-}
-
-function shift(terms, n) {
-    return terms.map(a => a + n);
-
-}
-
-function deBruijnReduce(expr, bind) {
-    
-}
-
-
-
-
-function unflatten(expression, bind) {
+function toDeBruijnString(expression, bindSymbol = "f") {
+    stringExpression = ""
     if (isVariable(expression)) {
-        return expression;
+        return toString(number(expression));
     }
-    else if (isAbstraction(expression, bind)) {
-        if (expression.length > 2) {
-            let tail = expression.slice(1);
-            return[expression[0], unflatten(tail)];
-
-        }
-        else {
-            return expression;
-        }
+    else if (isAbstraction(expression)) {
+        return "(" + bindSymbol + " " + toDeBruijnString(body(expression)) + ")";
     }
-    else if (isApplication(expression, bind)) {
-        if (expression.length > 2) {
-            let head = expression.slice(0, expression.length - 1);
-            return [unflatten(head), expression[expression.length - 1]];
-        }
-        else {
-            return expression;
-        }
+    else if (isApplication(expression)) {
+        let stringLeft = toDeBruijnString(left(expression));
+        let stringRight = toDeBruijnString(right(expression));
+        return "(" + stringLeft + " " + stringRight + ")";
     }
 }
 
-    
+// rules for printing
+// \ M N = \ (M N)
+// M N P = (M N) P
 
-
-let div = document.createElement("div");
-div.textContent = "hello";
-div.addEventListener("click", (e) => {
-    e.target.textContent = "surprise";
-}
-)
-document.body.append(div);
-
-// def = [name, body]
-function expandDef(expression, def) {
-    replace(def[0], def[1], expression);
-}
-
-// check to see if expression is in the form [[bind, "x", n], m]
-function reducible(expression, bind) {
-    return (expression.length == 2) && (expression[0][0] == bind);
+function parse(stringExpression) {
     
 }
 
-// assumes expression is in the form [["lambda", "x", n], m]
-function reduceApplication(expression) {
-    if (reducible(expression)) {
-        let variable = expression[0][1];
-        let body = expression[0][2];
-        let input = expression[1];
-        return replace(variable, input, body);
-    }
+function type(expression) {
+    return expression[0];
 }
 
-function replace(oldTerm, newTerm, expression) {
-    function change(term) {
-        if (term == oldTerm) {
-            return newTerm;
+function makeVariable(number) {
+    return ["variable", number];
+}
+
+function number(variable) {
+    return variable[1];
+}
+
+function makeApplication(left, right) {
+    return ["application", left, right];
+}
+
+function left(application) {
+    return application[1];
+}
+
+function right(application) {
+    return application[2];
+}
+
+function makeAbstraction(term) {
+    return ["abstraction", term];
+}
+
+function getBody(abstraction) {
+    return abstraction[2];
+}
+
+function isVariable(expression) {
+    return (expression[0] == "variable");
+}
+
+function isAbstraction(expression) {
+    return (expression[0] == "abstraction");
+}
+
+function isApplication(expression) {
+    return (expression[0] == "application");
+}
+
+// trying to reduce (\ M) N
+// decrement all free variables in M by 1.
+// replace any variable k if it has k parent \
+// with (N with all the free variables increased by k)
+
+
+function reducible(expression) {
+    return (isApplication(expression) && isAbstraction(left(expression)));
+}
+
+function outerVariable(variable, depth) {
+    return (number(variable) == depth);
+}
+
+function reduce(expression) {
+    let M = getBody(left(expression));
+    let N = right(expression);
+
+    let decrementedBody = decrementFree(M);
+
+    let reduced = expressionMap(decrementedBody, (variable, depth) => {
+        if (number(variable) == depth) {
+            return shiftFree(N, k);
         }
         else {
-            return term;
+            return variable;
+        }
+    });
+    return reduced;
+}
+
+function shiftFree(expression, k) {
+    function shiftIfFree(variable, depth) {
+        if (free(variable, depth)) {
+            let n = number(variable);
+            return makeVariable(n + k);
         }
     }
 
-    return recursiveMap(expression, change);
+    return expressionMap(expression, shiftIfFree);
 }
 
-// convert trees to binary trees using left associativity
-function makeLeftPairs(expression) {
-    if (expression.length > 2) {
-        return expression.reduce(
-            (a,b) => [a,b]
-        )
+// apply f(variable, depth) to every variable in expression
+// f returns a variable
+function expressionMap(expression, f, depth = 0) {
+    if (isVariable(expression)) {
+        return f(expression, depth);
     }
-    else
-    {
-        return expression;
+    else if (isAbstraction(expression)) {
+        return makeAbstraction(expressionMap(body(expression), f, depth + 1));
+    }
+    else if (isApplication(expression)) {
+        let newLeft = expressionMap(left(expression), f, depth);
+        let newRight = expressionMap(right(expression), f, depth);
+        return makeApplication(newLeft, newRight);
     }
 }
 
-// apply a function to every string in nested arrays
-function recursiveMap(expression, f) {
-    let newExpr = [];
-    let i=0;
-    while (i < expression.length) {
-        if (typeof(expression[i]) == "string") {
-             newExpr.push(f(expression[i]));
-        }
-        else {
-            newExpr.push(recursiveMap(expression[i], f));
-        }
-    i = i + 1;
-    }
-    return newExpr;
+// apply f(variable) to every free variable in expression
+function free(variable, depth) {
+    return (number(variable) > depth);
 }
-
