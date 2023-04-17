@@ -5,6 +5,7 @@ import { isVariable, isApplication, isAbstraction } from "./index.js";
 // " " "\n" terminate the current word if there is one and add it as a token
 // "(" ")" terminate the current word if there is one, add current char as next token
 // anything else: add to word
+
 function tokenize(parensExpr, whiteSpace, grouping) {
     let splitExpr = [];
     let word = "";
@@ -32,37 +33,8 @@ function tokenize(parensExpr, whiteSpace, grouping) {
     return splitExpr;
 }
 
-//  "(,(,equal,(,(,sum,five,),three,),),eight,)"
-// "(a b)"
-
-// stack holds ancestors, including current
+// split before separators and after separators
 // 
-
-function unflatten(expression, bind) {
-    if (isVariable(expression)) {
-        return expression;
-    }
-    else if (isAbstraction(expression, bind)) {
-        if (expression.length > 2) {
-            let tail = expression.slice(1);
-            return[expression[0], unflatten(tail)];
-
-        }
-        else {
-            return expression;
-        }
-    }
-    else if (isApplication(expression, bind)) {
-        if (expression.length > 2) {
-            let head = expression.slice(0, expression.length - 1);
-            return [unflatten(head), expression[expression.length - 1]];
-        }
-        else {
-            return expression;
-        }
-    }
-}
-
  
 function parse(tokens) {
     let tree = [];

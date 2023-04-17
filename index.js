@@ -1,44 +1,161 @@
-import { test, printExpr } from "./tests.js";
-import {and, or, not} from "./boolean.js";
-import {parse, tokenize, unflatten } from "./parsing.js";
 
-export { arrayEquals, mapFreeVariables, deBruijnReduce, isVariable, isApplication, isAbstraction };
+/*
+Simple tests:
+parse, expand defs, evaluate, and print (sum five three)
 
-// testing
+To Do:
+parse and print expressions written with the conventions that allow you
+to leave out certain parentheses
 
-function toDeBruijnString(expression, bindSymbol = "f") {
+expr =
+variable
+(lam variable expr)
+(expr expr)
+
+terms = expr expr expr ...
+terms = expr | expr terms
+
+(lam a terms) --> (lam a (terms))
+(expr expr terms) --> ((expr expr) terms)
+
+
+parse defs
+expand defs
+
+def = name expr
+expand nameOfDef code
+replace nameOfDef BodyOfDef code
+
+*/
+let ignore = [" ", "\n", "\t"];
+let parens = ["(", ")"];
+
+function tokenize(parensExpr, whiteSpace, grouping) {
+    let splitExpr = [];
+    let word = "";
+    for (let i = 0; i < parensExpr.length; i++) {
+        let current = parensExpr[i];
+
+        if (whiteSpace.includes(current)) {
+            if (word.length > 0) {
+                splitExpr.push(word);
+                word = "";
+            }
+
+        }
+        else if (grouping.includes(current)) {
+            if (word.length > 0) {
+                splitExpr.push(word);
+                word = "";
+            }
+            splitExpr.push(current);
+        }
+        else {
+            word += current;
+        }
+    }
+    return splitExpr;
+}
+
+function isBoundBy(variable, abstraction) {
+    return 0;
+}
+
+function print(expression, bindSymbol = "lam") {
+    console.log(toString(expression, bindSymbol));
+}
+
+// turns expression into a string with letter variables for printing 
+function toString(expression, bindSymbol = "lam") {
     stringExpression = ""
     if (isVariable(expression)) {
-        return toString(number(expression));
+        return getName(expression);
     }
     else if (isAbstraction(expression)) {
-        return "(" + bindSymbol + " " + toDeBruijnString(body(expression)) + ")";
+        return "(" + bindSymbol + getName(expression) + " " + toString(body(expression)) + ")";
     }
     else if (isApplication(expression)) {
-        let stringLeft = toDeBruijnString(left(expression));
-        let stringRight = toDeBruijnString(right(expression));
+        let stringLeft = toString(left(expression));
+        let stringRight = toString(right(expression));
         return "(" + stringLeft + " " + stringRight + ")";
     }
 }
 
-// rules for printing
-// \ M N = \ (M N)
-// M N P = (M N) P
 
-function parse(stringExpression) {
-    
+// takes a list of tokens, where variables are ints,
+function parse(tokens, bind) {
+    let i = 0;
+    function expect(token) {
+        if (token == tokens[i]) {
+            i++;
+            return true;
+        }
+        else {
+            console.log("Syntax Error: expected" + token);
+        }
+    }
+
+    function accept(token) {
+        if (token == tokens[i]) {
+            i++;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    function abstraction() {
+        let varName = tokens[i];
+        i++;
+        return makeAbstraction(varName, expr());
+    }
+
+    function definition() {
+        let name = tokens[i];
+        i++;
+        return makeDefinition(name, expr());
+    }
+
+    function expr() {
+        if (accept('(')) {
+            if (accept(bind)) {
+                let result = abstraction();
+            }
+            else if (accept("define")) {
+                let result = definition();
+            }
+            else {
+                let result = makeApplication(expr(), expr());
+            }
+            expect(")");
+        }
+        else {
+            let result = makeVariable(tokens[i]);
+            i++;
+        }
+        return result;
+
+    }
+
+    return expr(tokens);
 }
 
 function type(expression) {
     return expression[0];
 }
 
-function makeVariable(number) {
-    return ["variable", number];
+function makeVariable(name) {
+    return ["variable", name];
 }
 
-function number(variable) {
-    return variable[1];
+function getName(expression) {
+    if (isVariable(expression)) {
+        return expression[1];
+    }
+    else if (isAbstraction(expression)) {
+        return expression[1];
+    }
 }
 
 function makeApplication(left, right) {
@@ -53,8 +170,12 @@ function right(application) {
     return application[2];
 }
 
-function makeAbstraction(term) {
-    return ["abstraction", term];
+function makeAbstraction(name, body) {
+    function checkName(variable) {
+        return (getName(variable) == name);
+    }
+
+    return ["abstraction", variableName, body];
 }
 
 function getBody(abstraction) {
@@ -84,30 +205,25 @@ function reducible(expression) {
 }
 
 function outerVariable(variable, depth) {
-    return (number(variable) == depth);
+    return (getDepth(variable) == depth);
 }
 
-function reduce(expression) {
-    let M = getBody(left(expression));
-    let N = right(expression);
-
-    let decrementedBody = decrementFree(M);
-
-    let reduced = expressionMap(decrementedBody, (variable, depth) => {
-        if (number(variable) == depth) {
-            return shiftFree(N, k);
+function reduce(operator, argument) {
+    function replaceWithArgument(variable) {
+        if (isBoundBy(variable, operator)) {
+            return argument;
         }
         else {
             return variable;
         }
-    });
-    return reduced;
+    }
+    return expressionMap(getBody(operator), replaceWithArgument);
 }
 
 function shiftFree(expression, k) {
     function shiftIfFree(variable, depth) {
         if (free(variable, depth)) {
-            let n = number(variable);
+            let n = getDepth(variable);
             return makeVariable(n + k);
         }
     }
@@ -129,9 +245,4 @@ function expressionMap(expression, f, depth = 0) {
         let newRight = expressionMap(right(expression), f, depth);
         return makeApplication(newLeft, newRight);
     }
-}
-
-// apply f(variable) to every free variable in expression
-function free(variable, depth) {
-    return (number(variable) > depth);
 }

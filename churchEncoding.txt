@@ -1,5 +1,9 @@
 
 (define (inc n f x) (f (n f x)))
+
+(\inc code) (\n \f \x (f (n f x))
+
+
 (define (sum n m f x) (n f (m f x)))
 (define (product n m f x) (n (m f) x))
 
@@ -19,3 +23,26 @@
 
 (equal (sum five three) eight)
 ((equal ((sum five) three)) eight)
+
+(sum five three)
+
+(((\x (\y x)) y) z)
+
+(\x \y x) y z
+
+(\x \k x) y z
+(\k y) z
+y
+
+\x \y x
+x -> (y -> x)
+every variable free when first created?
+makeAbstraction goes through and binds any variables with matching name
+makeAbstraction(variableName, body)
+
+reduction
+find the variable instances in the body of the abstraction that correspond
+to the outermost abstraction
+make a new expression with those variables
+
+(lam x body)
