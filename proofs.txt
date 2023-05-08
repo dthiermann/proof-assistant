@@ -1,0 +1,11 @@
+statement: there are infinitely many primes
+there is a bijection between primes and natural numbers
+there is a 1-1 function from natural numbers to primes
+cardinality of the set of primes is the same as the cardinality of the set of natural numbers
+
+underlying representations for numbers:
+church numerals
+lists
+
+
+

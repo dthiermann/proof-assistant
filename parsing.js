@@ -33,8 +33,6 @@ function tokenize(parensExpr, whiteSpace, grouping) {
     return splitExpr;
 }
 
-// split before separators and after separators
-// 
  
 function parse(tokens) {
     let tree = [];
