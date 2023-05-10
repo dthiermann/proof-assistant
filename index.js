@@ -8,16 +8,15 @@ let expectedTokens = ["(","define","(","inc","n","f","x",")",
 let tokens = tokenizeParensExpr(text);
 let tokenTree = parse(tokens);
 
-
-
-console.log(rest([1,2,3]));
+// testParse();
+testTokenize();
 
 // assumptions:
 //   a and b have the same length
 //   the elements of a and b can be compared using !=
 // checks to see if a and b have the same elements
 function arrayDeepEquality(a,b) {
-    if (atom(a) && atom(b)) {
+    if (atom(a) || atom(b)) {
         return (a == b);
     }
     else {
@@ -40,17 +39,27 @@ function first(arr) {
 }
 
 function rest(arr) {
-    return arr.slice(1);
+    if (arr.length > 1) {
+        return arr.slice(1);
+    }
+    else {
+        return "null";
+    }
+    
 }
 
 
 function testTokenize() {
-    console.log(arrayEquality(tokens, expectedTokens));
+    console.log(tokenizeParensExpr("hello"));
+    console.log(arrayDeepEquality(tokens, expectedTokens));
 }
 
-function testParse() {
-    let expected = ["define", ["inc","n","f","x"],["f"["n","f","x"]]];
 
+
+function testParse() {
+    console.log(parse("hello"));
+    // let expected = ["define", ["inc","n","f","x"],["f"["n","f","x"]]];
+    //console.log(arrayDeepEquality(tokenTree, expected));
 
 }
 
@@ -60,6 +69,7 @@ function tokenizeParensExpr(parensExpr) {
   return tokenize(parensExpr, ignore, parens);
 }
 
+// string --> array (string)
 function tokenize(parensExpr, whiteSpace, grouping) {
   let splitExpr = [];
   let word = "";
@@ -76,10 +86,13 @@ function tokenize(parensExpr, whiteSpace, grouping) {
         splitExpr.push(word);
         word = "";
       }
-      splitExpr.push(current);
+        splitExpr.push(current);
     } else {
       word += current;
     }
+  }
+  if (word.length > 0) {
+      splitExpr.push(word);
   }
   return splitExpr;
 }
@@ -123,7 +136,7 @@ function parse(tokens) {
 
         }
         else {
-            let result = tokens[i];
+            result = tokens[i];
             i++;
         }
         return result;
