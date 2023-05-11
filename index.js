@@ -1,80 +1,65 @@
 let ignore = [" ", "\n", "\t"];
 let parens = ["(", ")"];
 
+// Type definitions
+// tokens: emptylist or list (string)
+// syntaxTree: string or list (syntaxTree)
+// expression object: variable (string), abstraction (string, expression),
+// or application (expression, expression)
+
+// everything is a string or a list
+
 // testing
 let text = "(define (inc n f x) (f (n f x)))";
 let expectedTokens = ["(","define","(","inc","n","f","x",")",
 "(","f","(","n","f","x",")",")",")"];
-let tokens = tokenizeParensExpr(text);
-let tokenTree = parse(tokens);
+let tokens = tokenizeParens(text);
+let tokenTree = buildSyntaxTree(tokens);
+let expression = buildExpr(tokenTree);
+let printedExpr = print(expression);
+console.log(text);
 
-// testParse();
-testTokenize();
+function test(actual, expected) {
+    if (equal(actual, expected)) {
+        console.log("passed");
+    } else {
+        console.log("failed");
+        console.log("Expected: " + print(expected));
+        console.log("Actual: " + print(actual));
+        
+    }
+}
 
-// assumptions:
-//   a and b have the same length
-//   the elements of a and b can be compared using !=
-// checks to see if a and b have the same elements
-function arrayDeepEquality(a,b) {
-    if (atom(a) || atom(b)) {
+function equal(a,b) {
+    if (typeof(a) == "string" && typeof(b) == "string") {
         return (a == b);
     }
-    else {
-        let headEquals = arrayDeepEquality(first(a), first(b));
-        let tailEquals = arrayDeepEquality(rest(a), rest(b));
-        return headEquals && tailEquals;
+    if (typeof(a) != typeof(b)) {
+        return false;
     }
-}
-
-// simple array functions
-function atom(a) {
-    let isNumber = (typeof(a) == "number");
-    let isString = (typeof(a) == "string");
-    let isBool = (typeof(a) == "boolean");
-    return (isNumber || isString || isBool);
-}
-
-function first(arr) {
-    return arr[0];
-}
-
-function rest(arr) {
-    if (arr.length > 1) {
-        return arr.slice(1);
+    if (a.length != b.length) {
+        return false;
     }
-    else {
-        return "null";
+    for (let i = 0; i < a.length; i++) {
+        if (not (equal(a[i], b[i]))) {
+            return false;
+        }
     }
-    
-}
-
-
-function testTokenize() {
-    console.log(tokenizeParensExpr("hello"));
-    console.log(arrayDeepEquality(tokens, expectedTokens));
-}
-
-
-
-function testParse() {
-    console.log(parse("hello"));
-    // let expected = ["define", ["inc","n","f","x"],["f"["n","f","x"]]];
-    //console.log(arrayDeepEquality(tokenTree, expected));
-
+    return true;
 }
 
 // parsing and printing:
 
-function tokenizeParensExpr(parensExpr) {
-  return tokenize(parensExpr, ignore, parens);
+function tokenizeParens(input) {
+  return tokenize(input, ignore, parens);
 }
 
 // string --> array (string)
-function tokenize(parensExpr, whiteSpace, grouping) {
+function tokenize(input, whiteSpace, grouping) {
   let splitExpr = [];
   let word = "";
-  for (let i = 0; i < parensExpr.length; i++) {
-    let current = parensExpr[i];
+  for (let i = 0; i < input.length; i++) {
+    let current = input[i];
 
     if (whiteSpace.includes(current)) {
       if (word.length > 0) {
@@ -101,9 +86,8 @@ function print(expression, bindSymbol = "lambda") {
   console.log(toString(expression, bindSymbol));
 }
 
-// turns expression into a string with letter variables for printing
+// turns expression into a string
 function toString(expression, bindSymbol = "lambda") {
-  stringExpression = "";
   if (isVariable(expression)) {
     return getName(expression);
   } else if (isAbstraction(expression)) {
@@ -116,21 +100,21 @@ function toString(expression, bindSymbol = "lambda") {
       ")"
     );
   } else if (isApplication(expression)) {
-    let stringLeft = toString(left(expression));
-    let stringRight = toString(right(expression));
+    let stringLeft = toString(operator(expression));
+    let stringRight = toString(argument(expression));
     return "(" + stringLeft + " " + stringRight + ")";
   }
 }
 
-function parse(tokens) {
+function buildSyntaxTree(tokens) {
     let i = 0;
 
-    function nestedList() {
-        let result = [];
+    function syntaxTree() {
+        let result = []
         if (tokens[i] == "(") {
             i++;
             while (tokens[i] != ")") {
-                result.push(nestedList());
+                result.push(syntaxTree());
             }
             i++;
 
@@ -142,9 +126,27 @@ function parse(tokens) {
         return result;
     }
 
-    return nestedList();
+    return syntaxTree();
 
 }
+
+
+function buildExpr(syntaxTree, bind) {
+    if (typeof(syntaxTree) == "string") {
+        return makeVariable(syntaxTree);
+    }
+    else if (syntaxTree[0] == bind) {
+        let name = syntaxTree[1];
+        let body = buildExpr(syntaxTree.slice(2));
+        return makeAbstraction(name, body);
+    }
+    else {
+        let exprList = syntaxTree.map(buildExpr);
+        return exprList.reduce(makeApplication);
+    }
+
+}
+
 // constructors and getters:
 
 function type(expression) {
@@ -167,11 +169,11 @@ function makeApplication(left, right) {
   return ["application", left, right];
 }
 
-function left(application) {
+function operator(application) {
   return application[1];
 }
 
-function right(application) {
+function argument(application) {
   return application[2];
 }
 
@@ -184,15 +186,15 @@ function getBody(abstraction) {
 }
 
 function isVariable(expression) {
-  return expression[0] == "variable";
+  return type(expression) == "variable";
 }
 
 function isAbstraction(expression) {
-  return expression[0] == "abstraction";
+  return type(expression) == "abstraction";
 }
 
 function isApplication(expression) {
-  return expression[0] == "application";
+  return type(expression) == "application";
 }
 
 // trying to reduce (\ M) N
@@ -201,34 +203,14 @@ function isApplication(expression) {
 // with (N with all the free variables increased by k)
 
 function reducible(expression) {
-  return isApplication(expression) && isAbstraction(left(expression));
+  return isApplication(expression) && isAbstraction(operator(expression));
 }
 
 function outerVariable(variable, depth) {
   return getDepth(variable) == depth;
 }
 
-function reduce(operator, argument) {
-  function replaceWithArgument(variable) {
-    if (isBoundBy(variable, operator)) {
-      return argument;
-    } else {
-      return variable;
-    }
-  }
-  return expressionMap(getBody(operator), replaceWithArgument);
-}
 
-function shiftFree(expression, k) {
-  function shiftIfFree(variable, depth) {
-    if (free(variable, depth)) {
-      let n = getDepth(variable);
-      return makeVariable(n + k);
-    }
-  }
-
-  return expressionMap(expression, shiftIfFree);
-}
 
 // apply f(variable, depth) to every variable in expression
 // f returns a variable
@@ -238,8 +220,8 @@ function expressionMap(expression, f, depth = 0) {
   } else if (isAbstraction(expression)) {
     return makeAbstraction(expressionMap(body(expression), f, depth + 1));
   } else if (isApplication(expression)) {
-    let newLeft = expressionMap(left(expression), f, depth);
-    let newRight = expressionMap(right(expression), f, depth);
+    let newLeft = expressionMap(operator(expression), f, depth);
+    let newRight = expressionMap(argument(expression), f, depth);
     return makeApplication(newLeft, newRight);
   }
 }
