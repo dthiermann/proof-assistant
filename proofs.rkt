@@ -21,24 +21,40 @@
    (equals (subtract-one a) (subtract-one b))))
 
 
-       
+; infinitely many primes: first proof
+
+; prove that the following evaluates to true
+; where for-all performs the induction on tree structure
+(for-all numbers
+  (implies (is-list-of-natural-numbers numbers)
+           (and (is-prime (get-new-prime numbers))
+                (not (in numbers (get-new-prime numbers))))))
+
+; (for-all n (statement n))
+; n is null or string or pair
+; check the following:
+; (statement null) = true
+; (statement string) = true, for any string
+; (statement a) = true, and (statement b) = true,
+;   imply (statement (pair a b)) = true
+
+
   
 
 
-
-
-(define (get-new-prime primes)
-  (smallest-factor (sum (set-product primes) 1)))
+                   
+(define (get-new-prime numbers)
+  (smallest-factor (sum (set-product numbers) 1)))
 
 (define (is-prime n)
   (not (foldl or
              (map (lambda (a) (divides? a n))
                   (range 2 n)))))
-
-
   
 (define (set-product numbers)
   (foldl product numbers))
+
+
 
 
 
@@ -55,6 +71,4 @@
   (if (less-or-equal high low) null
       (pair low (range (inc low) high))))
 
-(define (inc n) (+ n 1))
-(range 2 7)
   
