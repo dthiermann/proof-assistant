@@ -1,1 +1,283 @@
 #lang racket
+; how does the actual program work?
+; user enters statement in some formal language
+; user enters proof in some formal proof language
+; user-entered proof takes the form of a series of statements,
+; such that each statement is implied by some statements above,
+; does the user have to provide inference rules for each step?
+
+; computer checks that the proof is valid
+; goal, computer automates some steps, or some kinds of proofs
+
+; confusion between sets, types, lists, inclusion functions,
+; sets have some notion of inclusion
+; programming lists are tuples in math, ordered, finite, indexed,
+
+;get smallest factor of n that's greater than 1
+
+; gives start, start + 1, start + 2 ... end - 1,
+; (range n) = 1,2,3 .. n - 1,
+
+;list interface
+list = null or (item list)
+pair, first, rest,
+
+;natural number interface
+zero?, add1, minus1,
+
+; write a program that substitutes definitions and variables
+; what does a proof look like when all the definitions are expanded?
+
+(define (f n) (small-factor (add1 (factorial n))))
+(and (prime (f n)) (greater (f n) n))
+
+; need to prove both these statements for all n
+(prime (small-factor (add1 (factorial n))))
+(greater (small-factor (add1 (factorial n))) n)
+
+;for the first statement, it suffices to prove for all n
+(prime (small-factor n))
+
+
+
+(greater 0 n) = false
+(greater (add1 n) 0) = true
+(greater (add1 n) (add1 m)) = (greater n m)
+
+; case n = 0 is trivial
+suppose (greater (small-factor (add1 (factorial n)))) n) = true
+then evaluate
+(greater (small-factor (add1 (factorial (add1 n)))) (add1 n))
+
+(factorial (add1 n)) = (product (add1 n) (factorial n)) = (sum (product n (factorial n)) (factorial n))
+
+; take the regular proof, but keep all the definitions expanded,
+(greater (small-factor (add1 (factorial n))) n)
+
+everything in range 2 n divides (factorial n)
+everything in range 2 n doesn't divide (add1 (factorial n))
+(small-factor (add1 (factorial n))) divides (add1 (factorial n))
+so (small-factor (add1 (factorial n))) is not in range 2 n
+and not equal to 1, so greater than n
+
+
+(divides (range 2 n) (factorial n))
+(not (divides (range 2 n) (add1 (factorial n))))
+
+(divides (range 2 n) (foldleft product (range (add1 n))))
+
+(divides a b)
+b in (a * (range b))
+
+
+
+
+(define (range start end)
+  (cond ((= start end) null)
+        ((< start end) (pair start (range (add1 start) end)))))
+
+(define (range end) (range 1 end))
+
+(define (filter condition list)
+  (cond ((null? list) null)
+        ((condition (first list)) (pair (first list) (filter condition (rest list))))
+        (else (filter condition (rest list)))))
+
+
+(define (sum n)
+  (iter add1 n))
+
+
+(define (product n m)
+  ((iter (sum n) m) 0))
+
+
+
+(define (small-factor n)
+  (first (filter (lambda a (divides a n)) (range 2 n))))
+  
+
+(define (factorial n)
+  (foldleft product (range (add1 n))))
+
+
+(define (prime k)
+  (not (in k (product (range k) (range k)))))
+
+(define (in item list)
+  (foldleft (lambda a b (or (equal a item) (equal b item)))))
+
+
+            
+
+; write everything in terms of a small number of recursive operators
+
+
+
+;DEFINITIONS
+
+(define (infinite set) (not (finite set)))
+(define (finite set) (there-exists natural-number n
+                                   (there-exists f (bijection f (range n) set))))
+(define (bijection f domain range)
+  (and (injection f domain range) (surjection f domain range)))
+
+(define (injection f domain range)
+  (for-all a b domain (implies (equal (f a) (f b)) (equal a b))))
+
+(define (surjection f domain range)
+  (equal (image f domain) range))
+
+list: type -> type
+(define (list item-type)
+  (or empty
+      (pair item-type (list item-type))))
+
+; (range n) is 0,1,2,3 ... n - 1
+; (range 2 n) is 2,3,... n - 1
+
+; a subset of natural-numbers is a function N -> [true, false]
+(define (for-all set variable statement))
+
+(define (divides a b)
+  (there-exists (range b) divisor
+                (equal (product a divisor) b)))
+
+(define (small-factor n)
+  (min (non-trivial-factors n)))
+
+(define (non-trivial-factors n)
+  (filter (range 2 (add1 n)) (lambda a (divides a n))))
+
+pair-min: natural-number -> natural-number -> truth
+(define (pair-min n m)
+  (if (less-than n m) n m))
+
+(define (min numbers)
+  (foldleft pair-min numbers))
+
+(define (is-prime n)
+  (for-all (range n) a
+    (for-all (range n) b
+      (not (equal n (product a b))))))
+
+(define natural-number
+  (or zero
+      (add1 natural-number)))
+
+
+; THEOREMS
+
+;infinitely many prime numbers
+
+(for-all natural-numbers n (and (is-prime (f n)) (greater-than (f n) n)))
+
+theorem: small-factor-is-prime
+(for-all natural-numbers n (is-prime (small-factor n)))
+
+proof:
+
+(let k (small-factor n))
+(let a (in (range 2 k)))
+(not (divides a n))
+(implies (not (divides a n)) (not (divides a k)))
+(not (divides a k))
+(is-prime k)
+
+k small-factor n
+means
+k divides n
+and
+if 1 < a < k, then a does not divide n
+
+a does not divide n
+there doesn't exist m st am = n
+for all m, am != n
+there exists t st kt = n
+
+there exists t st
+for all m, am != kt
+for all c, atc != kt
+ac != k
+so a does not divide k
+
+k smallest non-one factor of n
+(exclusive-interval 1 k) does not divide n
+n is not in product (exclusive-interval 1 k) N
+n is in product k N
+
+want to show: k is not in product (exclusive-interval 1 k) N
+
+
+
+
+(for-all n (greater-than (prime-factor (add1 (factorial n))) n))
+
+let new-prime = prime-factor (add1 (factorial n))
+
+new-prime is greater than 1
+doesn't divide 1
+
+divides (add1 (factorial n))
+if it divided (factorial n), then
+it would also divide (difference (add1 (factorial n)) (factorial n)) = 1,
+but it doesn't, so
+it doesn't divide (factorial n)
+
+relying on a lemma: a divides b, a divides c, c < b, then a divides (difference b c)
+(implies (divides a b)
+         (divides a c)
+         (less-than c b)
+         (divides a (difference b c)))
+
+
+;substitution and distribution
+(difference b c) = (difference ak aq) = a (k - q)
+so a divides (difference b c)
+
+so can't be anything in 1,2,...n
+so is > n
+
+; every number has a prime factorization
+if n has no divisors between 1 and n,
+then its prime factors are [1,n]
+-------------------------------------------------------------------------
+; sum of two odd numbers is even
+for all odd numbers a,b,
+a + b is even
+
+; rephrased to quantify over all N
+for all numbers a,b
+(a,b odd) implies ((a + b) even)
+
+; rephrased to avoid variables and quantifiers
+(is-subset (sum odd odd) even)
+odd = 2N + 1
+
+
+
+possible definitions of odd:
+n odd
+there exist a number k st n = 2k + 1
+2 does not divide n --> there does not exist a number k st n = 2k,
+0 even, 1 odd, is-odd(n) = is-odd(n - 2)
+
+Proof using first definition
+a, b odd
+there exists k,q, st
+a = 2k + 1
+b = 2q + 1
+a + b = (2k + 1) + (2q + 1) = 2(k + q) + 2 = 2(k + q + 1)
+there exists m st
+(a + b) = 2m
+so (a + b) is even
+
+inference rules used:
+def of odd
+using witnesses of existence
+doing substitutions based on equalities
+associativity, distributivity, commutativity of +
+def of even
+
+
+
