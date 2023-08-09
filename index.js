@@ -1,11 +1,13 @@
 let ignore = [" ", "\n", "\t"];
 let parens = ["(", ")"];
 
+
 // Type definitions
 // tokens: emptylist or list (string)
 // syntaxTree: string or list (syntaxTree)
 // expression object: variable (string), abstraction (string, expression),
 // or application (expression, expression)
+// 
 
 // everything is a string or a list
 
@@ -86,7 +88,7 @@ function print(expression, bindSymbol = "lambda") {
   console.log(toString(expression, bindSymbol));
 }
 
-// turns expression into a string
+
 function toString(expression, bindSymbol = "lambda") {
   if (isVariable(expression)) {
     return getName(expression);
@@ -206,9 +208,6 @@ function reducible(expression) {
   return isApplication(expression) && isAbstraction(operator(expression));
 }
 
-function outerVariable(variable, depth) {
-  return getDepth(variable) == depth;
-}
 
 
 

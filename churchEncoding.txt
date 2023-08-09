@@ -18,7 +18,6 @@
 (equal (sum five three) eight)
 (equal (product two three) six)
 
-(equal (sum five three) eight)
-((equal ((sum five) three)) eight)
 
-(sum five three)
+
+

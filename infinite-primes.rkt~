@@ -1,27 +1,76 @@
 #lang racket
-(define (f n) (small-factor (add1 (factorial n))))
+;DEFINITIONS
 
-for all n, (f n) > n :
+(define (fold-product items)
+  (fold product items))
 
-Proof:
-(f n) > 1
-divides n! + 1
-so (f n) doesn't divide n!
-so (f n) doesn't divide any of 2,3,4, ... n
-so (f n) isn't equal to 2,3,4, ... n
-and (f n) > 1
-so (f n) > n
+(define (divides a b)
+  (there-exists natural-number k (equal (product a k) b)))
+
+(define (in list item)
+  (cond ((null list) false)
+        ((equal item (first list)) true)
+        (else (in (rest list) item))))
+
+; NATURAL LANGUAGE PROOF
+
+Let ps be a list of prime numbers
+Let n = (product ps) + 1
+
+By prime-factor existence,
+there is a prime p that divides n
+
+Suppose p is in ps.
+Then p divides (product ps).
+
+Summary:
+p divides (product ps)
+p divides n
+
+suppose that for any numbers a,b,c, (with b > c)
+(and (divides a b) (divides a c))
+then there exists witnesses k, m,
+st
+ak = b
+am = c
+so
+ak - am = b - c
+a(k - m) = b - c
+so a divides (b - c)
+
+applying this to
+p divides (product ps)
+p divides n
+we get
+p divides (difference n (product ps)) = 1
+
+p divides 1
+there exists q st
+pq = 1
+if q = 0, then pq = 0
+so q > 0
+but then pq >= p > 1
+pq = 1 and pq > 1
+contradiction
+
+Summary of previous part:
+(p in ps) implies contradiction
+so p is not in ps
+p is prime
+
+so for any finite set of primes ps,
+there is a prime p not in ps,
+so the set of primes is not equal to ps,
+so the set of primes is infinite,
 
 
 
-for all n, (small-factor n) is prime:
 
-Proof:
-let k = small-factor n
-for any a st 1 < a < k , a does not divide n (by def of small-factor)
-k divides n, a does not divide n, implies a does not divide k,
-so k is prime
 
+
+
+
+           
 
 
 
