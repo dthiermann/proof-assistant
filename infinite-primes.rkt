@@ -65,41 +65,86 @@ so the set of primes is infinite,
 
 ; PROOF in the form of inference rules
 
+;LIST OF INFERENCE RULES
+A valid inference is a composition of the primitive inference rules listed here:
 
-Let f: (list natural) -> natural
-Let (f n) = (product ps) + 1
+(let x (any set)) creates a variable x representing an arbitrary member of set
+anything proved about x is proved for all x in set
 
-prime-factor-existence = for-all natural k, there-exists natural p st (p prime) and p divides k
+universal elim:
+for-all a in A, (statement a)
+b in A,
+----------
+(statement b)
 
-take any n in N
-then (f n) in N
-then by prime-factor-existence,
-there exists p st p prime and p divides (f n)
+universal intro:
+(statement k) can be derived from (k in A)
+---------
+for-all a in A, (statement a)
 
-so for all n in N, there exists p st p prime, p divides (f n).
+;DEFINITIONS
+(define (list item-type)
+  (or empty (pair item-type (list item-type))))
 
 
-Suppose p is in ps.
-Let rest = all the elements of ps except p
-Then p * rest = product ps
+(define (list-product empty) 1)
+(define (list-product (pair n nums))
+  (product n (list-product nums)))
+
+
+;PROOF
+
+(let ps (any (list prime)))
+(let n  (add1 (product ps)))
+
+prime-factor existence:
+witness: (prime-factor n)
+
+(let p (prime-factor n))
+(divides p n)
+(prime p)
+
+(suppose (in p ps))
+
+multiplication commutative and associative
+implies
+
+list-product ps
+= list-product swap-p-with-first-element
+= product p (list-product everything-else)
+
 Then p divides (product ps).
 
 Summary:
 (p in ps) implies (p divides (product ps))
 p divides n
 
-suppose that for any numbers a,b,c, (with b > c)
-(and (divides a b) (divides a c))
-then there exists witnesses k, m,
-st
-ak = b
-am = c
+(let (a,b,c) (any (tuple 3 natural-number)))
+(suppose (and (greater-than b c)
+              (divides a b)
+              (divides a c)))
+
+(divides a b)
+means we have a constructor (divisor a b)
+st (product a (divisor a b)) = b
+
+(let k (divisor a b))
+(let m (divisor a c))
+
+(equal (product a k) b)
+(equal (product a m) c)
+
+(equal (difference (product a k) (product a m))
+       (difference b c))
+
+(equal (product a (difference k m))
+       (difference b c))
+
 so
-ak - am = b - c
-a(k - m) = b - c
-so a divides (b - c)
+(divides a (difference b c))
 
 applying this to
+
 p divides (product ps)
 p divides n
 we get
@@ -123,6 +168,7 @@ so for any finite set of primes ps,
 there is a prime p not in ps,
 so the set of primes is not equal to ps,
 so the set of primes is infinite,
+
 
 
 
